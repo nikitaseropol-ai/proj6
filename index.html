@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Калькулятор стоимости заказа</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🍽️ Калькулятор стоимости заказа</h1>
+      <p class="subtitle">Рассчитайте стоимость вашего заказа</p>
+    </header>
+
+    <main class="calculator-container">
+      <div class="calculator">
+        <div class="form-section">
+          <div class="form-group">
+            <label for="quantity" class="form-label">Количество порций:</label>
+            <input type="number" id="quantity" min="1" value="1" class="form-input">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Выберите блюдо:</label>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input type="radio" id="type1" name="dishType" value="pelmeni" checked>
+                <label for="type1" class="radio-label">
+                  <span class="dish-name">Пельмени</span>
+                  <span class="dish-price">200 ₽/порция</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input type="radio" id="type2" name="dishType" value="macaroni">
+                <label for="type2" class="radio-label">
+                  <span class="dish-name">Макароны</span>
+                  <span class="dish-price">от 325 ₽/порция</span>
+                </label>
+              </div>
+              <div class="radio-option">
+                <input type="radio" id="type3" name="dishType" value="puree">
+                <label for="type3" class="radio-label">
+                  <span class="dish-name">Пюре</span>
+                  <span class="dish-price">от 250 ₽/порция</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="options-group" style="display: none;">
+            <label for="options" class="form-label">Дополнительно к макаронам:</label>
+            <select id="options" class="form-select">
+              <option value="meat">С мясом (+50 ₽)</option>
+              <option value="cutlet">С котлеткой (+25 ₽)</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="property-group" style="display: none;">
+            <div class="checkbox-option">
+              <input type="checkbox" id="property">
+              <label for="property" class="checkbox-label">
+                <span class="custom-checkbox"></span>
+                Добавить грибы (+100 ₽)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="price-section">
+          <div class="price-display" id="price-result">
+            <div class="price-label">Общая стоимость:</div>
+            <div class="price-amount">200 ₽</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Базовая цена для каждого типа блюда
+    const basePrices = {
+      pelmeni: 200,
+      macaroni: 300,
+      puree: 250
+    };
+
+    // Дополнительные цены для опций
+    const optionPrices = {
+      meat: 50,
+      cutlet: 25
+    };
+
+    // Дополнительная цена для свойства
+    const propertyPrice = 100;
+
+    // Получаем элементы DOM
+    const quantityInput = document.getElementById('quantity');
+    const dishTypeRadios = document.querySelectorAll('input[name="dishType"]');
+    const optionsGroup = document.getElementById('options-group');
+    const optionsSelect = document.getElementById('options');
+    const propertyGroup = document.getElementById('property-group');
+    const propertyCheckbox = document.getElementById('property');
+    const priceResult = document.getElementById('price-result');
+    const priceAmount = priceResult.querySelector('.price-amount');
+
+    // Функция для расчета стоимости
+    function calculatePrice() {
+      // Получаем выбранный тип блюда
+      let selectedType;
+      for (const radio of dishTypeRadios) {
+        if (radio.checked) {
+          selectedType = radio.value;
+          break;
+        }
+      }
+
+      // Получаем количество
+      const quantity = parseInt(quantityInput.value) || 1;
+
+      // Начинаем с базовой цены
+      let price = basePrices[selectedType];
+
+      // Добавляем стоимость опции, если она выбрана
+      if (selectedType === 'macaroni' && optionsGroup.style.display !== 'none') {
+        const selectedOption = optionsSelect.value;
+        price += optionPrices[selectedOption];
+      }
+
+      // Добавляем стоимость свойства, если оно выбрано
+      if (selectedType === 'puree' && propertyGroup.style.display !== 'none' && propertyCheckbox.checked) {
+        price += propertyPrice;
+      }
+
+      // Рассчитываем общую стоимость
+      const totalPrice = price * quantity;
+
+      // Обновляем отображение цены
+      priceAmount.textContent = `${totalPrice} ₽`;
+    }
+
+    // Функция для обновления видимости опций и свойств
+    function updateOptionsVisibility() {
+      // Получаем выбранный тип блюда
+      let selectedType;
+      for (const radio of dishTypeRadios) {
+        if (radio.checked) {
+          selectedType = radio.value;
+          break;
+        }
+      }
+
+      // Скрываем все опции и свойства
+      optionsGroup.style.display = 'none';
+      propertyGroup.style.display = 'none';
+
+      // Показываем соответствующие опции и свойства
+      if (selectedType === 'macaroni') {
+        optionsGroup.style.display = 'block';
+      } else if (selectedType === 'puree') {
+        propertyGroup.style.display = 'block';
+      }
+    }
+
+    // Назначаем обработчики событий
+    quantityInput.addEventListener('input', calculatePrice);
+    
+    for (const radio of dishTypeRadios) {
+      radio.addEventListener('change', function() {
+        updateOptionsVisibility();
+        calculatePrice();
+      });
+    }
+    
+    optionsSelect.addEventListener('change', calculatePrice);
+    propertyCheckbox.addEventListener('change', calculatePrice);
+
+    // Инициализация при загрузке
+    updateOptionsVisibility();
+    calculatePrice();
+  </script>
+</body>
+</html>
